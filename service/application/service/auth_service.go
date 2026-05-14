@@ -23,10 +23,15 @@ func ProvideAuthService(userRepo repository.UserRepositoryInterface) AuthService
 }
 
 func (s *AuthService) Register(ctx context.Context, registerRequest dto.RegisterRequest) error {
+	hashedPassword, err := helper.HashPassword(registerRequest.Password)
+	if err != nil {
+		return err
+	}
+
 	return s.UserRepo.Create(ctx, &dao.User{
 		Name:     registerRequest.Username,
 		Email:    registerRequest.Email,
-		Password: registerRequest.Password,
+		Password: hashedPassword,
 	})
 }
 
