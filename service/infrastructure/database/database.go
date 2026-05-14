@@ -33,12 +33,6 @@ func ConnectDB() {
 	if err != nil {
 		panic("Failed to connect database")
 	}
-
-	sqlDB, err := database.DB()
-	if err != nil {
-			panic(err)
-	}
-	if err := sqlDB.Ping(); err != nil {
-			panic(err)
-	}
+	
+	DB = database
 }
