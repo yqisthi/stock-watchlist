@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"stock-watchlist/application/helper"
 	"stock-watchlist/application/service"
 	"stock-watchlist/domain/model/dto"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -14,50 +16,44 @@ type AuthControllerInterface interface {
 
 type AuthController struct {
 	AuthService service.AuthServiceInterface
+	validator *validator.Validate
 }
 
-func ProvideAuthController(authService service.AuthServiceInterface) AuthControllerInterface {
-	return &AuthController{AuthService: authService}
+func ProvideAuthController(authService service.AuthServiceInterface, validator *validator.Validate) AuthControllerInterface {
+	return &AuthController{AuthService: authService, validator: validator}
 }
 
-func (c *AuthController) Register(ctx *fiber.Ctx) error {
-	var registerRequest dto.RegisterRequest
-
-	if err := ctx.BodyParser(&registerRequest); err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"message": "invalid request",
-		})
+func (ac *AuthController) Register(ctx *fiber.Ctx) error {
+	registerRequest, err := helper.ParseRequest[dto.RegisterRequest](ctx)
+		if err != nil {
+			return helper.ClientErrorJSONResponse(ctx, err)
 	}
 
-	err := c.AuthService.Register(ctx.Context(), registerRequest)
+	if err = helper.ValidateRequest(registerRequest, ac.validator); err != nil {
+		return helper.ClientErrorJSONResponse(ctx, err)
+	}
+
+	err = ac.AuthService.Register(ctx.Context(), registerRequest)
 
 	if err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		return helper.ClientErrorJSONResponse(ctx, err)
 	}
 
-	return ctx.JSON(fiber.Map{
-		"message": "register success",
-	})
+	return helper.ClientSuccessJSONResponse(ctx	, nil)
 }
 
-func (c *AuthController) Login(ctx *fiber.Ctx) error {
-	var loginRequest dto.LoginRequest
+func (ac *AuthController) Login(ctx *fiber.Ctx) error {
+	loginRequest, err := helper.ParseRequest[dto.LoginRequest](ctx)
 
-	if err := ctx.BodyParser(&loginRequest); err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"message": "invalid request",
-		})
+	if err = helper.ValidateRequest(loginRequest, ac.validator); err != nil {
+		return helper.ClientErrorJSONResponse(ctx, err)
 	}
 
-	token, err := c.AuthService.Login(ctx.Context(), loginRequest)
+	token, err := ac.AuthService.Login(ctx.Context(), loginRequest)
 
 	if err != nil {
-		return ctx.Status(401).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		return helper.ClientErrorJSONResponse(ctx, err)
 	}
 
-	return ctx.JSON(token)
+	return helper.ClientSuccessJSONResponse(ctx, token)
 }

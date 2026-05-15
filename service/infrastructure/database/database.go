@@ -2,8 +2,10 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"stock-watchlist/infrastructure/logger"
+
+	gormLogger "gorm.io/gorm/logger"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -16,7 +18,7 @@ func ConnectDB() {
 	err := godotenv.Load()
 
 	if err != nil {
-		log.Println(".env not found")
+		logger.Error(err, ".env not found")
 	}
 
 	dsn := fmt.Sprintf(
@@ -28,11 +30,14 @@ func ConnectDB() {
 		os.Getenv("DB_PORT"),
 	)
 
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: gormLogger.Default.LogMode(gormLogger.Info),
+	})
 
 	if err != nil {
-		panic("Failed to connect database")
+		logger.Error(err, "Failed to connect database")
 	}
 	
+	logger.Info("Database connected")
 	DB = database
 }

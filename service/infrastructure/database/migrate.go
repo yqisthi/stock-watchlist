@@ -1,7 +1,7 @@
 package database
 
 import (
-	"log"
+	"stock-watchlist/infrastructure/logger"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -15,14 +15,14 @@ func RunMigrations() {
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err, "Failed to initialize migrations")
 	}
 
 	err = m.Up()
 
 	if err != nil && err.Error() != "no change" {
-		log.Fatal(err)
+		logger.Error(err, "Failed to run migrations")
 	}
 
-	log.Println("Migrations applied")
+	logger.Info("Migrations applied")
 }
