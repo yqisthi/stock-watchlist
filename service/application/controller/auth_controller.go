@@ -33,7 +33,7 @@ func (ac *AuthController) Register(ctx *fiber.Ctx) error {
 		return helper.ClientErrorJSONResponse(ctx, err)
 	}
 
-	err = ac.AuthService.Register(ctx.Context(), registerRequest)
+	err = ac.AuthService.Register(ctx.UserContext(), registerRequest)
 
 	if err != nil {
 		return helper.ClientErrorJSONResponse(ctx, err)
@@ -49,7 +49,7 @@ func (ac *AuthController) Login(ctx *fiber.Ctx) error {
 		return helper.ClientErrorJSONResponse(ctx, err)
 	}
 
-	token, err := ac.AuthService.Login(ctx.Context(), loginRequest)
+	token, err := ac.AuthService.Login(ctx.UserContext(), loginRequest)
 
 	if err != nil {
 		return helper.ClientErrorJSONResponse(ctx, err)

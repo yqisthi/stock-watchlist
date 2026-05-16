@@ -46,7 +46,10 @@ func InitTracer() func(context.Context) error {
 	otel.SetTracerProvider(provider)
 
 	otel.SetTextMapPropagator(
-		propagation.TraceContext{},
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{},
+		),
 	)
 
 	return provider.Shutdown

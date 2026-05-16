@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"stock-watchlist/application/controller"
+	"stock-watchlist/application/router"
 	"stock-watchlist/application/service"
 	"stock-watchlist/domain/repository"
 	"stock-watchlist/infrastructure/database"
 	"stock-watchlist/infrastructure/logger"
 	"stock-watchlist/infrastructure/telemetry"
+	"stock-watchlist/tracing"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/contrib/otelfiber"
@@ -22,18 +24,17 @@ func main() {
 
 	shutdown := telemetry.InitTracer()
 	defer shutdown(context.Background())
+	tracing.Init()
 
 	app := fiber.New()
-
 	app.Use(otelfiber.Middleware())
 
 	validator := validator.New()
-	userRepo := repository.ProvideUserRepository(database.DB)
-	authService := service.ProvideAuthService(userRepo)
-	authController := controller.ProvideAuthController(authService, validator)
+	repositories := repository.ProvideRepositories(database.DB)
+	services := service.ProvideServices(repositories)
+	controllers := controller.ProvideControllers(services, validator)
 
-	app.Post("/register", authController.Register)
-	app.Post("/login", authController.Login)
+	router.SetupRoutes(app, controllers)
 
 	app.Listen(":8080")
 }
